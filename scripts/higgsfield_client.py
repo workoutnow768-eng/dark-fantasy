@@ -23,15 +23,37 @@ one:
      image_url is fed the Higgsfield-hosted URL returned by the still-image
      step directly (Higgsfield keeps generation outputs available for at
      least 7 days per their docs) -- no separate re-upload step needed.
+
+     FIX 2026-09-08 (round 2): the endpoint path above is correct, but
+     platform.higgsfield.ai (the host auto-post7 already uses successfully
+     for images) 404s on it with {"detail":"model_not_found"} -- confirmed
+     via a live Actions run where all 3 stills generated fine on that host
+     but every video call 404'd. docs.higgsfield.ai's own quickstart curl
+     example targets a DIFFERENT host, api.higgsfield.ai, which is what its
+     public openapi.json (where this endpoint path came from) actually
+     describes. platform.higgsfield.ai and api.higgsfield.ai apparently
+     serve different model catalogs under the same auth. Image generation
+     stays on platform.higgsfield.ai (proven working); video generation now
+     targets api.higgsfield.ai instead.
 """
 import os
 import time
 import requests
 import concurrent.futures
 
-BASE_URL = "https://platform.higgsfield.ai"
-GENERATE_IMAGE_ENDPOINT = f"{BASE_URL}/higgsfield-ai/soul/v2/standard"
-GENERATE_VIDEO_ENDPOINT = f"{BASE_URL}/bytedance/seedance/v1/lite/image-to-video"
+IMAGE_BASE_URL = "https://platform.higgsfield.ai"
+GENERATE_IMAGE_ENDPOINT = f"{IMAGE_BASE_URL}/higgsfield-ai/soul/v2/standard"
+
+# Still uncertain which exact host/path combo this account's video model
+# lives at (see the fix note above) -- tried in order, first one that
+# doesn't 404 with "model_not_found" wins. A non-404 failure (bad prompt,
+# auth, nsfw, etc) is a REAL error and is raised immediately without
+# trying the rest of the list, so this never masks an actual problem.
+GENERATE_VIDEO_ENDPOINT_CANDIDATES = [
+    "https://api.higgsfield.ai/bytedance/seedance/v1/lite/image-to-video",
+    "https://platform.higgsfield.ai/bytedance-ai/seedance/v1/lite/image-to-video",
+    "https://platform.higgsfield.ai/bytedance/seedance/v1/lite/image-to-video",
+]
 
 POLL_INTERVAL_SECONDS = 5
 POLL_TIMEOUT_SECONDS = 300  # video jobs run longer than image jobs
@@ -65,6 +87,32 @@ def _submit(endpoint, payload):
     if not status_url:
         raise GenerationFailed(f"No status_url in response: {data}")
     return status_url
+
+
+_working_video_endpoint = None  # cached once one candidate succeeds, so later calls in the same run skip straight to it
+
+
+def _submit_video(payload):
+    """Tries each URL in GENERATE_VIDEO_ENDPOINT_CANDIDATES until one
+    doesn't 404 with model_not_found. Caches the winner for the rest of
+    this process. Raises the LAST candidate's error if every candidate
+    404s, or immediately raises any non-404 error (that's a real failure,
+    not a wrong-endpoint guess)."""
+    global _working_video_endpoint
+    candidates = [_working_video_endpoint] if _working_video_endpoint else GENERATE_VIDEO_ENDPOINT_CANDIDATES
+    last_err = None
+    for endpoint in candidates:
+        try:
+            result = _submit(endpoint, payload)
+            _working_video_endpoint = endpoint
+            return result
+        except GenerationFailed as e:
+            msg = str(e)
+            if "404" in msg and "model_not_found" in msg:
+                last_err = e
+                continue
+            raise  # a real error (bad request, auth, etc) -- don't hide it by trying other URLs
+    raise GenerationFailed(f"No working video endpoint found among {candidates}. Last error: {last_err}")
 
 
 def poll_until_done(status_url, poll_interval=POLL_INTERVAL_SECONDS, timeout=POLL_TIMEOUT_SECONDS):
@@ -164,7 +212,7 @@ def generate_video_from_image(prompt, image_url, out_path, duration=8, resolutio
     last_err = None
     for attempt in range(max_retries):
         try:
-            status_url = _submit(GENERATE_VIDEO_ENDPOINT, {
+            status_url = _submit_video({
                 "prompt": prompt,
                 "image_url": image_url,
                 "duration": duration,
