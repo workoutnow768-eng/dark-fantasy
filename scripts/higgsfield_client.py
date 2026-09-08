@@ -9,32 +9,47 @@ safety rule -- but this pipeline needs TWO model calls per post instead of
 one:
 
   1. generate_image()        -- Soul v2 standard, produces the still.
-  2. generate_video_from_image() -- Bytedance Seedance v1 Lite
-     image-to-video, animates that still into an 8s silent clip with the
-     camera locked (camera_fixed=True). Confirmed against Higgsfield's
-     public OpenAPI spec (docs.higgsfield.ai/docs/openapi.json) 2026-09-08:
-     endpoint is POST /bytedance/seedance/v1/lite/image-to-video, body
-     {prompt, image_url, duration (2-12s), resolution (480/720/1080),
-     aspect_ratio, camera_fixed}. This model has no audio input/output at
-     all -- there is no generate_audio flag to set because it never
-     produces sound, which is exactly what this page needs (music gets
-     muxed on separately in mux_audio.py).
+  2. generate_video_from_image() -- Minimax Hailuo 2.3 standard
+     image-to-video, animates that still into a silent clip with the
+     camera locked (via prompt wording only -- see below). This model has
+     no audio input/output at all, which is exactly what this page needs
+     (music gets muxed on separately in mux_audio.py).
 
      image_url is fed the Higgsfield-hosted URL returned by the still-image
      step directly (Higgsfield keeps generation outputs available for at
      least 7 days per their docs) -- no separate re-upload step needed.
 
-     FIX 2026-09-08 (round 2): the endpoint path above is correct, but
-     platform.higgsfield.ai (the host auto-post7 already uses successfully
-     for images) 404s on it with {"detail":"model_not_found"} -- confirmed
-     via a live Actions run where all 3 stills generated fine on that host
-     but every video call 404'd. docs.higgsfield.ai's own quickstart curl
-     example targets a DIFFERENT host, api.higgsfield.ai, which is what its
-     public openapi.json (where this endpoint path came from) actually
-     describes. platform.higgsfield.ai and api.higgsfield.ai apparently
-     serve different model catalogs under the same auth. Image generation
-     stays on platform.higgsfield.ai (proven working); video generation now
-     targets api.higgsfield.ai instead.
+     FIX 2026-09-08 (round 3): originally targeted Bytedance Seedance v1
+     Lite (POST /bytedance/seedance/v1/lite/image-to-video on
+     api.higgsfield.ai), which is a real, correctly-documented endpoint --
+     but 404'd with model_not_found on every host/path variant tried.
+     Root cause found via the cloud.higgsfield.ai dashboard: this account's
+     developer API key has ONLY 3 models enabled at all -- Soul 2, Soul
+     Cinema, Soul ID -- all image models, zero video, regardless of plan
+     tier (confirmed on a near-top-tier plan). This is a different, more
+     limited catalog than the Higgsfield MCP/app account (which does have
+     Seedance 2.0 Mini -- that's what generated the manual test clips
+     earlier in this project).
+
+     Switched to Minimax Hailuo 2.3 (POST
+     /minimax/hailuo-2.3/standard/image-to-video on api.higgsfield.ai) as
+     the first model outside the 3 confirmed-enabled ones to actually try
+     -- a different vendor than Bytedance, so it isn't necessarily gated by
+     the same enablement. Its request shape is simpler/different: no
+     resolution or camera_fixed params at all (schema per Higgsfield's
+     public openapi.json: prompt, image_url, duration [6 or 10 only],
+     prompt_optimizer). Camera-lock now relies entirely on the prompt
+     wording (already explicit about it in scene_bank.py's animate_prompt
+     text) since there's no structured param for it on this model.
+     duration=6 (not 8) because 6/10 are the only allowed values -- 6 is
+     the cheaper of the two. mux_audio.CLIP_DURATION_SECONDS was updated
+     to match.
+
+     If this also turns out to be unavailable (404 model_not_found), that
+     confirms the account's developer API key just has no video access at
+     all yet, independent of vendor -- at that point the fix is on
+     Higgsfield's side (enable a video model for this key), not more
+     endpoint-guessing here.
 """
 import os
 import time
@@ -43,17 +58,7 @@ import concurrent.futures
 
 IMAGE_BASE_URL = "https://platform.higgsfield.ai"
 GENERATE_IMAGE_ENDPOINT = f"{IMAGE_BASE_URL}/higgsfield-ai/soul/v2/standard"
-
-# Still uncertain which exact host/path combo this account's video model
-# lives at (see the fix note above) -- tried in order, first one that
-# doesn't 404 with "model_not_found" wins. A non-404 failure (bad prompt,
-# auth, nsfw, etc) is a REAL error and is raised immediately without
-# trying the rest of the list, so this never masks an actual problem.
-GENERATE_VIDEO_ENDPOINT_CANDIDATES = [
-    "https://api.higgsfield.ai/bytedance/seedance/v1/lite/image-to-video",
-    "https://platform.higgsfield.ai/bytedance-ai/seedance/v1/lite/image-to-video",
-    "https://platform.higgsfield.ai/bytedance/seedance/v1/lite/image-to-video",
-]
+GENERATE_VIDEO_ENDPOINT = "https://api.higgsfield.ai/minimax/hailuo-2.3/standard/image-to-video"
 
 POLL_INTERVAL_SECONDS = 5
 POLL_TIMEOUT_SECONDS = 300  # video jobs run longer than image jobs
@@ -87,32 +92,6 @@ def _submit(endpoint, payload):
     if not status_url:
         raise GenerationFailed(f"No status_url in response: {data}")
     return status_url
-
-
-_working_video_endpoint = None  # cached once one candidate succeeds, so later calls in the same run skip straight to it
-
-
-def _submit_video(payload):
-    """Tries each URL in GENERATE_VIDEO_ENDPOINT_CANDIDATES until one
-    doesn't 404 with model_not_found. Caches the winner for the rest of
-    this process. Raises the LAST candidate's error if every candidate
-    404s, or immediately raises any non-404 error (that's a real failure,
-    not a wrong-endpoint guess)."""
-    global _working_video_endpoint
-    candidates = [_working_video_endpoint] if _working_video_endpoint else GENERATE_VIDEO_ENDPOINT_CANDIDATES
-    last_err = None
-    for endpoint in candidates:
-        try:
-            result = _submit(endpoint, payload)
-            _working_video_endpoint = endpoint
-            return result
-        except GenerationFailed as e:
-            msg = str(e)
-            if "404" in msg and "model_not_found" in msg:
-                last_err = e
-                continue
-            raise  # a real error (bad request, auth, etc) -- don't hide it by trying other URLs
-    raise GenerationFailed(f"No working video endpoint found among {candidates}. Last error: {last_err}")
 
 
 def poll_until_done(status_url, poll_interval=POLL_INTERVAL_SECONDS, timeout=POLL_TIMEOUT_SECONDS):
@@ -200,25 +179,25 @@ def generate_image(prompt, out_path, aspect_ratio="9:16", resolution="1080p", ma
     raise GenerationFailed(f"Failed after {max_retries} attempts: {last_err}")
 
 
-def generate_video_from_image(prompt, image_url, out_path, duration=8, resolution="720",
-                               aspect_ratio="9:16", max_retries=2):
+def generate_video_from_image(prompt, image_url, out_path, duration=6, max_retries=2):
     """
     End-to-end animate step: submit -> poll -> download the silent video.
-    camera_fixed=True always -- this page's whole visual identity is a
-    completely static camera with only the scene itself moving (see
-    content-engine/niches/DARK_FANTASY_VIDEO_STYLE.md). Never pass
-    camera_fixed=False here.
+    Minimax Hailuo 2.3 has no camera_fixed param -- the "camera completely
+    locked, only ambient elements move" instruction lives entirely in the
+    prompt text (see scene_bank.py's animate_prompt wording). duration
+    must be 6 or 10 -- 6 is the cheaper option and what this pipeline
+    always uses. prompt_optimizer=False keeps the prompt literal instead
+    of letting Higgsfield rewrite it, since these prompts are already
+    deliberately worded to enforce the style lock.
     """
     last_err = None
     for attempt in range(max_retries):
         try:
-            status_url = _submit_video({
+            status_url = _submit(GENERATE_VIDEO_ENDPOINT, {
                 "prompt": prompt,
                 "image_url": image_url,
                 "duration": duration,
-                "resolution": resolution,
-                "aspect_ratio": aspect_ratio,
-                "camera_fixed": True,
+                "prompt_optimizer": False,
             })
             result = poll_until_done(status_url)
             video_url = _first_url_in(result, "videos", "video", "outputs")

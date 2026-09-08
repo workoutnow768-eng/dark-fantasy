@@ -12,7 +12,15 @@ import json
 import subprocess
 
 TRACK_DURATION_SECONDS = 254.088  # "Creaking Hallways.mp3" -- see state file for rotation offset
-CLIP_DURATION_SECONDS = 8.042      # matches the ~8s Seedance output; ffmpeg -t trims to this exactly
+# FIX 2026-09-09: was 8.042s (matching Seedance's ~8s output) -- switched
+# video model to Minimax Hailuo 2.3 after Seedance turned out to have zero
+# access on this account's developer API key (see higgsfield_client.py's
+# module docstring). Hailuo only allows duration 6 or 10; this pipeline
+# always requests 6 (the cheaper option). -shortest in the ffmpeg command
+# below trims to whichever stream (video or this 6.0s audio cut) is
+# actually shorter, so this doesn't need to match the real output duration
+# exactly -- 6.0 is just the audio-side upper bound.
+CLIP_DURATION_SECONDS = 6.0
 FADE_SECONDS = 0.5
 
 

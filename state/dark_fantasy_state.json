@@ -5,11 +5,11 @@
   "music_offset_seconds": 0.0,
   "last_run_at": null,
   "last_run_slot": null,
-  "posts_per_day": 3,
+  "posts_per_day": 1,
   "daily_time_slots_uk": [
     "09:00",
     "15:00",
     "19:00"
   ],
-  "notes": "last_scene_index starts at -1 so the first run posts scene_bank.SCENES[0] first. scheduled_up_to is seeded to today so the first run's posts land tomorrow -- adjust this if you want the very first batch to post today instead."
+  "notes": "posts_per_day TEMPORARILY set to 1 (2026-09-09) to keep the Minimax Hailuo test run cheap and minimal while confirming the new video model actually works -- set back to 3 once a run succeeds end-to-end. last_scene_index starts at -1 so the first run posts scene_bank.SCENES[0] first. scheduled_up_to is seeded to today so the first run's posts land tomorrow -- adjust this if you want the very first batch to post today instead."
 }

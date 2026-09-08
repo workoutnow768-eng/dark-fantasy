@@ -19,9 +19,11 @@ main content-engine repo for the full style lock this pipeline follows.
 1. **Generate** (`scripts/main.py generate`): picks the next 3 scenes from
    `scripts/scene_bank.py`'s rotation, for each one:
    - generates a still image (Higgsfield Soul v2, 1080p, 9:16)
-   - animates it into an 8s silent video (Bytedance Seedance v1 Lite,
-     camera locked completely still -- only ambient elements like fog,
-     fire, or fabric move)
+   - animates it into a 6s silent video (Minimax Hailuo 2.3 -- Bytedance
+     Seedance was the original plan but this account's developer API key
+     has no video models enabled for it, only Minimax; camera lock is
+     enforced via prompt wording only, since this model has no structured
+     camera-lock parameter)
    - mixes in the page's music track (`ffmpeg`, fading in/out, stepping
      through the track so consecutive posts don't reuse the same slice)
    - writes a manifest of the 3 finished .mp4 paths + scheduled times
@@ -95,9 +97,11 @@ where in the music track the next mux should start
 while the scheduled workflow is active, same rule as auto-post7's state
 files.
 
-## Cost per run (3 posts)
+## Cost per run
 
-- Still (Soul v2, 2k): ~2cr x 3 = ~6cr
-- Animate (Seedance v1 Lite, 720p, 8s): ~20cr x 3 = ~60cr
-- Total: ~65-70cr/day against the `cloud.higgsfield.ai` API credit pool
-  (not the Higgsfield app/MCP balance -- see the secrets table above).
+- Still (Soul v2, 1080p): check the "Credits Used" counter on
+  cloud.higgsfield.ai/dashboard before/after a run for the real number.
+- Animate (Minimax Hailuo 2.3, 6s): same -- check the dashboard.
+- `posts_per_day` is temporarily set to 1 in `state/dark_fantasy_state.json`
+  while confirming the new video model works end to end -- bump it back to
+  3 once a run succeeds, to match the original 3-posts/day plan.
