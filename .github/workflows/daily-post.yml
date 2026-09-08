@@ -1,0 +1,55 @@
+name: Daily Dark Fantasy Bot
+
+on:
+  schedule:
+    # Same off-the-hour offset trick as auto-post7 (avoids GitHub Actions'
+    # top-of-hour congestion window that delayed that bot's runs).
+    - cron: "17 17 * * *"
+  workflow_dispatch: {}  # manual test run from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ffmpeg (for muxing music onto the generated video)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate today's scenes (still -> video -> mux music)
+        env:
+          HIGGSFIELD_API_KEY_ID: ${{ secrets.HIGGSFIELD_API_KEY_ID }}
+          HIGGSFIELD_API_KEY_SECRET: ${{ secrets.HIGGSFIELD_API_KEY_SECRET }}
+          MUSIC_TRACK_URL: ${{ secrets.MUSIC_TRACK_URL }}
+        run: python scripts/main.py generate
+
+      - name: Commit + push videos (so Buffer can fetch them by URL)
+        run: |
+          git config user.name "dark-fantasy-bot"
+          git config user.email "dark-fantasy-bot@users.noreply.github.com"
+          git add output/dark_fantasy
+          git diff --cached --quiet || git commit -m "Dark fantasy pipeline: videos for $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Schedule posts on Buffer
+        env:
+          BUFFER_ACCESS_TOKEN_DARKFANTASY: ${{ secrets.BUFFER_ACCESS_TOKEN_DARKFANTASY }}
+        run: python scripts/main.py schedule
+
+      - name: Commit state
+        run: |
+          git config user.name "dark-fantasy-bot"
+          git config user.email "dark-fantasy-bot@users.noreply.github.com"
+          git add state/dark_fantasy_state.json output/dark_fantasy
+          git diff --cached --quiet || git commit -m "Dark fantasy pipeline: state update $(date -u +%Y-%m-%d)"
+          git push
