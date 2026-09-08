@@ -116,12 +116,21 @@ def download_file(url, out_path):
     return out_path
 
 
-def generate_image(prompt, out_path, aspect_ratio="9:16", resolution="2k", max_retries=2):
+def generate_image(prompt, out_path, aspect_ratio="9:16", resolution="1080p", max_retries=2):
     """
     End-to-end still generation: submit -> poll -> download. Returns
     (local_path, hosted_url) -- the hosted_url is fed straight into
     generate_video_from_image() so the video model can fetch the same
     image without a re-upload round trip.
+
+    FIX 2026-09-08: this originally defaulted to resolution="2k" (the
+    value the Higgsfield MCP tool's alias accepts), but the raw
+    platform.higgsfield.ai REST API used here rejects that outright --
+    confirmed via a live GitHub Actions run failing 3/3 scenes with
+    "HTTP 422 ... Input should be '720p' or '1080p'". The Soul v2
+    standard endpoint's resolution enum on this API is only 720p/1080p,
+    no "2k"/"4k" aliases -- use "1080p" for the highest quality still
+    this endpoint actually supports.
     """
     last_err = None
     for attempt in range(max_retries):

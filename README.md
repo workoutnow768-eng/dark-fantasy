@@ -18,7 +18,7 @@ main content-engine repo for the full style lock this pipeline follows.
 
 1. **Generate** (`scripts/main.py generate`): picks the next 3 scenes from
    `scripts/scene_bank.py`'s rotation, for each one:
-   - generates a still image (Higgsfield Soul v2, 2k, 9:16)
+   - generates a still image (Higgsfield Soul v2, 1080p, 9:16)
    - animates it into an 8s silent video (Bytedance Seedance v1 Lite,
      camera locked completely still -- only ambient elements like fog,
      fire, or fabric move)
