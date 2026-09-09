@@ -97,11 +97,10 @@ where in the music track the next mux should start
 while the scheduled workflow is active, same rule as auto-post7's state
 files.
 
-## Cost per run
+## Cost per run (confirmed 2026-09-09)
 
-- Still (Soul v2, 1080p): check the "Credits Used" counter on
-  cloud.higgsfield.ai/dashboard before/after a run for the real number.
-- Animate (Minimax Hailuo 2.3, 6s): same -- check the dashboard.
-- `posts_per_day` is temporarily set to 1 in `state/dark_fantasy_state.json`
-  while confirming the new video model works end to end -- bump it back to
-  3 once a run succeeds, to match the original 3-posts/day plan.
+- Still (Soul v2, 1080p) + animate (Minimax Hailuo 2.3, 6s): ~5cr per post
+  combined (measured via the "Credits Used" delta on
+  cloud.higgsfield.ai/dashboard for one real post).
+- At 3 posts/day: ~15cr/day against the `cloud.higgsfield.ai` API credit
+  pool (not the Higgsfield app/MCP balance -- see the secrets table above).
