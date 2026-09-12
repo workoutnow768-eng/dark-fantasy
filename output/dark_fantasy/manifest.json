@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-09-12T17:29:18Z",
+  "start_index": 7,
+  "count": 3,
+  "final_scene_index": 9,
+  "final_scheduled_up_to": "2026-09-13T19:00:00Z",
+  "final_music_offset": 60.0,
+  "items": [
+    {
+      "title": "burning watchtower",
+      "scene_index": 7,
+      "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
+      "video_repo_path": "output/dark_fantasy/20260912_1_burning_watchtower/final.mp4",
+      "scheduled_at": "2026-09-13T09:00:00Z"
+    },
+    {
+      "title": "the wild hunt",
+      "scene_index": 8,
+      "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
+      "video_repo_path": "output/dark_fantasy/20260912_2_the_wild_hunt/final.mp4",
+      "scheduled_at": "2026-09-13T15:00:00Z"
+    },
+    {
+      "title": "the green man grove",
+      "scene_index": 9,
+      "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
+      "video_repo_path": "output/dark_fantasy/20260912_3_the_green_man_grove/final.mp4",
+      "scheduled_at": "2026-09-13T19:00:00Z"
+    }
+  ]
+}
