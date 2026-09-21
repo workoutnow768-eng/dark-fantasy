@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-09-21T17:29:36Z",
+  "start_index": 10,
+  "count": 3,
+  "final_scene_index": 0,
+  "final_scheduled_up_to": "2026-09-22T19:00:00Z",
+  "final_music_offset": 222.0,
+  "items": [
+    {
+      "title": "baba yaga's hut",
+      "scene_index": 10,
+      "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
+      "video_repo_path": "output/dark_fantasy/20260921_1_baba_yaga's_hut/final.mp4",
+      "scheduled_at": "2026-09-22T09:00:00Z"
+    },
+    {
+      "title": "castle in the clouds",
+      "scene_index": 11,
+      "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
+      "video_repo_path": "output/dark_fantasy/20260921_2_castle_in_the_clouds/final.mp4",
+      "scheduled_at": "2026-09-22T15:00:00Z"
+    },
+    {
+      "title": "grand staircase",
+      "scene_index": 0,
+      "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
+      "video_repo_path": "output/dark_fantasy/20260921_3_grand_staircase/final.mp4",
+      "scheduled_at": "2026-09-22T19:00:00Z"
+    }
+  ]
+}
