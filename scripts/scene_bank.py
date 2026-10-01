@@ -27,15 +27,15 @@ and that the rotation "keeps almost repeating itself":
      deliberate camera move (push-in, pull-back, pan, tilt, orbit, or
      dolly), a different one per scene so consecutive posts don't move
      the same way either.
-  2. The bank grew from 12 to 18 scenes. At 3 posts/day the 12-scene
+  2. The bank grew from 12 to 17 scenes. At 3 posts/day the 12-scene
      bank fully repeated every 4 days, which is fast enough to notice --
      especially since every scene shared the same "wide shot, small
-     figure, vast backdrop" composition. 18 scenes stretches one full
-     cycle to 6 days and the 6 new scenes deliberately break from the
-     "figure dwarfed by landscape" template (a close-in forge, a crowded
-     feast hall, a collapsing tower interior) for more compositional
-     variety within the cycle, not just more of the same shot repeated
-     with different dressing.
+     figure, vast backdrop" composition. 17 scenes stretches one full
+     cycle to about 5.7 days and the 5 new scenes deliberately break
+     from the "figure dwarfed by landscape" template (a close-in forge,
+     a crowded feast hall, a collapsing tower interior) for more
+     compositional variety within the cycle, not just more of the same
+     shot repeated with different dressing.
 
 `has_people` alternates true/false across the bank below by design so
 consecutive posts don't repeat the same subject pattern.
@@ -104,7 +104,15 @@ SCENES = [
             "composition, no text."
         ),
         "animate_prompt": (
-            "Bri    {
+            "Bring this image to life with a slow camera pan to the "
+            "right, following the line of travelers across the bridge. "
+            "Mist rolls through the chasm, the rope bridge sways gently, "
+            "clouds drift and stormlight shifts, the hawk circles lower. "
+            "Epic, majestic dark fantasy mood, not horror. No new people "
+            "appear, no text."
+        ),
+    },
+    {
         "title": "dragon and blood moon",
         "has_people": False,
         "still_prompt": (
@@ -419,6 +427,3 @@ SCENES = [
         ),
     },
 ]
-
-        ),
-    },
