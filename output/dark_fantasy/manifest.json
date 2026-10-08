@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-07T22:04:54Z",
+  "generated_at": "2026-10-08T22:10:58Z",
   "start_index": 13,
   "count": 3,
   "final_scene_index": 15,
@@ -10,21 +10,21 @@
       "title": "the long feast hall",
       "scene_index": 13,
       "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
-      "video_repo_path": "output/dark_fantasy/20261007_1_the_long_feast_hall/final.mp4",
+      "video_repo_path": "output/dark_fantasy/20261008_1_the_long_feast_hall/final.mp4",
       "scheduled_at": "2026-10-05T09:00:00Z"
     },
     {
       "title": "collapsing tower interior",
       "scene_index": 14,
       "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
-      "video_repo_path": "output/dark_fantasy/20261007_2_collapsing_tower_interior/final.mp4",
+      "video_repo_path": "output/dark_fantasy/20261008_2_collapsing_tower_interior/final.mp4",
       "scheduled_at": "2026-10-05T15:00:00Z"
     },
     {
       "title": "the siege line at dawn",
       "scene_index": 15,
       "text": "#darkfantasy #fantasyart #gothic #medievalfantasy #aiart",
-      "video_repo_path": "output/dark_fantasy/20261007_3_the_siege_line_at_dawn/final.mp4",
+      "video_repo_path": "output/dark_fantasy/20261008_3_the_siege_line_at_dawn/final.mp4",
       "scheduled_at": "2026-10-05T19:00:00Z"
     }
   ]
